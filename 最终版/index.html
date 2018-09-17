@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Title</title>
+	<style>
+		canvas {
+			border: 1px solid #000;
+		}
+	</style>
+
+	<canvas id="id-canvas" width="400" height="300"></canvas>
+	<hr>
+	<input type="range" id="id-input-speed" value="1">
+
+	<!--gua game 相关文件-->
+	<script src="guagame/tools.js"></script>
+	<script src="guagame/Gua_Game.js"></script>
+	<script src="guagame/mouse.js"></script>
+	<script src="guagame/gua_scene.js"></script>
+
+	<!--场景文件-->
+	<script src="scene/main/Paddle.js"></script>
+	<script src="scene/main/Ball.js"></script>
+	<script src="scene/main/Block.js"></script>
+	<script src="scene/main/scene.js"></script>
+
+	<!--结束和标题场景-->
+	<script src="scene/end/scene_end.js"></script>
+	<script src='scene/title/scene_title.js'></script>
+
+	<!--关卡数据-->
+	<script src="level.js"></script>
+	<script src="main.js"></script>
+</head>
+<body>
+</body>
+</html>

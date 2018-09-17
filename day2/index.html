@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bread-block</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+<section>
+    <canvas id="id-canvas" width="400" height="300"></canvas>
+    <hr>
+    <input type="range" id="id-input-speed">
+</section>
+<script src="utility.js"></script>
+<script src="Gua.js"></script>
+<script src="block.js"></script>
+<script src="paddle.js"></script>
+<script src="ball.js"></script>
+<script src="level.js"></script>
+<script>
+    var loadLevel = function (n) {
+        n = n - 1
+        var level = levels[n]
+        var blocks = []
+        for (var i = 0; i < level.length; i++) {
+            var p = level[i]
+            var b = Block(p)
+            blocks.push(b)
+        }
+        return blocks
+    }
+
+    var enableDebugMode = function (enable) {
+        // 为了 debug 需要 把 pause 和 blocks 改为全局变量
+        if (!enable) {
+            return
+        }
+        window.addEventListener("keydown", function (e) {
+            var k = e.key
+            if (k === "p") {
+                // 暂停
+                paused = !paused
+            } else if ("1234567".includes(k)) {
+                // 关卡切换
+                blocks = loadLevel(Number(k))
+            }
+        })
+
+        var speedControl = document.querySelector("#id-input-speed")
+        speedControl.addEventListener('input', function (e) {
+            window.fps = Number(e.target.value)
+        })
+    }
+
+    var __main = function () {
+        paused = false
+        enableDebugMode(true)
+
+        var game = GuaGame(40)
+        var paddle = Paddle()
+        var ball = Ball()
+
+        blocks = loadLevel(1)
+
+        // 这里就是 状态更新
+        game.registerAction("a", function () {
+            paddle.moveLeft()
+        })
+
+        game.registerAction("d", function () {
+            paddle.moveRight()
+        })
+
+        game.registerAction("f", function () {
+            ball.fire()
+        })
+
+        game.update = function () {
+            if (paused) {
+                return
+            }
+            ball.move()
+            // ball 和 paddle 相撞
+            if (paddle.collide(ball)) {
+                // 球反向
+                ball.rebound()
+            }
+
+            // ball 和 blocks 相撞
+            for (var i = 0; i < blocks.length; i++) {
+                var block = blocks[i]
+                if (block.collide(ball)) {
+                    // 砖块被撞了
+                    block.kill()
+                    ball.rebound()
+                }
+            }
+        }
+
+        game.draw = function () {
+            game.drawImage(paddle)
+            game.drawImage(ball)
+
+            for (var i = 0; i < blocks.length; i++) {
+                var block = blocks[i]
+                if (block.alive) {
+                    // 绘制砖块
+                    game.drawImage(block)
+                }
+            }
+        }
+    }
+
+    // 程序的总入口
+    __main()
+</script>
+</body>
+</html>

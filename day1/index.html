@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>bread block</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+<section>
+    <canvas id="id-canvas" width="400" height="300"></canvas>
+</section>
+<script>
+    var log = console.log.bind(console)
+
+    // 载入图片
+    var imageFromPath = function (path) {
+        var img = new Image()
+        img.src = path
+        return img
+    }
+
+    // 将挡板抽象为对象
+    var Paddle = function () {
+        var image = imageFromPath("paddle.png")
+        var o = {
+            image: image,
+            // 起始位置
+            x: 150,
+            y: 200,
+            // 速度
+            speed: 5,
+        }
+        o.moveLeft = function () {
+            o.x -= o.speed
+        }
+        o.moveRight = function () {
+            o.x += o.speed
+        }
+        o.collide = function (ball) {
+            // 这里的 o 是 挡板, 判断与球的相撞
+            // 高度重叠
+            if (ball.y + ball.image.height > o.y) {
+                // 宽度重叠
+                if (ball.x >= o.x && ball.x + ball.image.width <= o.x + o.image.width) {
+                    return true
+                }
+            }
+            return false
+        }
+        return o
+    }
+
+    // 将球抽象为对象
+    var Ball = function () {
+        var image = imageFromPath("ball.png")
+        var o = {
+            image: image,
+            // 起始位置
+            x: 100,
+            y: 200,
+            // 球可以弹
+            speedX: 5,
+            speedY: 5,
+            fired: false,
+        }
+        o.move = function () {
+            if (o.fired) {
+                // 与外面相撞 todo 会超出边框
+                if (o.x < 0 || o.x > 400) {
+                    o.speedX = -o.speedX
+                }
+                if (o.y < 0 || o.y > 300) {
+                    o.speedY = -o.speedY
+                }
+                o.x += o.speedX
+                o.y += o.speedY
+            }
+        }
+
+        o.fire = function () {
+            o.fired = true
+        }
+        return o
+    }
+
+    // 抽象 setInterval
+    var GuaGame = function () {
+        // g 是对整个游戏画布的抽象
+        var canvas = document.querySelector("#id-canvas")
+        var context = canvas.getContext("2d")
+
+        var g = {
+            canvas: canvas,
+            context: context,
+            actions: {},
+            keydowns: {},
+        }
+
+        // draw
+        g.drawImage = function (guaImage) {
+            g.context.drawImage(guaImage.image, guaImage.x, guaImage.y)
+        }
+
+        window.addEventListener("keydown", function (e) {
+            // 存储按键状态
+            g.keydowns[e.key] = true
+        })
+
+        window.addEventListener("keyup", function (e) {
+            // 存储按键状态
+            g.keydowns[e.key] = false
+        })
+
+        // 注册事件到 g.actions 上
+        g.registerAction = function (key, callback) {
+            g.actions[key] = callback
+        }
+
+        // 定时器
+        setInterval(function () {
+            // 遍历 key ,如果有键被按下了,就去执行它
+            var actions = Object.keys(g.actions)
+
+            for (var i = 0; i < actions.length; i++) {
+                var key = actions[i]
+                if (g.keydowns[key]) {
+                    // 如果按键按下, 调用注册的 action
+                    g.actions[key]()
+                }
+            }
+            // 随时都在更新状态
+            g.update()
+            // clear
+            context.clearRect(0, 0, canvas.width, canvas.height)
+            // draw
+            g.draw()
+        }, 1000 / 30)
+        return g
+    }
+
+    var __main = function () {
+        var game = GuaGame()
+        var paddle = Paddle()
+        var ball = Ball()
+
+        // 这里就是 状态更新
+        game.registerAction("a", function () {
+            paddle.moveLeft()
+        })
+
+        game.registerAction("d", function () {
+            paddle.moveRight()
+        })
+
+        game.registerAction("f", function () {
+            ball.fire()
+        })
+
+        game.update = function () {
+            ball.move()
+            // 判断相撞
+            if (paddle.collide(ball)) {
+                // 撞了
+                ball.speedY *= -1
+            }
+        }
+
+        game.draw = function () {
+            game.drawImage(paddle)
+            game.drawImage(ball)
+        }
+    }
+
+    // 程序的总入口
+    __main()
+</script>
+</body>
+</html>
